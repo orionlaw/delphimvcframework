@@ -2,7 +2,7 @@
 //
 // Delphi MVC Framework
 //
-// Copyright (c) 2010-2024 Daniele Teti and the DMVCFramework Team
+// Copyright (c) 2010-2025 Daniele Teti and the DMVCFramework Team
 //
 // https://github.com/danieleteti/delphimvcframework
 //
@@ -62,13 +62,13 @@ var
 type
   TPoolObject = class
   strict private
-    FValue: integer;
+    fValue: integer;
   public
     constructor Create; overload;
     constructor Create(value: integer); overload;
     destructor Destroy; override;
-    Function GetValue : integer;
-    property value: integer read FValue;
+    function GetValue : integer;
+    property Value: integer read FValue;
   end;
 
   { TTestTObjectPool }

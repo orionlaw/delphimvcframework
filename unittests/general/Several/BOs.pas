@@ -2,7 +2,7 @@
 //
 // Delphi MVC Framework
 //
-// Copyright (c) 2010-2024 Daniele Teti and the DMVCFramework Team
+// Copyright (c) 2010-2025 Daniele Teti and the DMVCFramework Team
 //
 // https://github.com/danieleteti/delphimvcframework
 //
@@ -422,6 +422,14 @@ type
     FPropTime: TTime;
     FPropCurrency: Currency;
     fPropJSONObject: TJSONObject;
+    FPropIntegerSqids: Integer;
+    FPropInt64Sqids: Int64;
+    FPropUInt32Sqids: UInt32;
+    FPropInt32Sqids: Int32;
+    FPropUInt16Sqids: UInt16;
+    FPropInt16Sqids: Int16;
+    FPropUInt64Sqids: UInt64;
+    FPropInt32: cardinal;
     procedure SetPropAnsiString(const Value: AnsiString);
     procedure SetPropString(const Value: string);
     procedure SetPropInt64(const Value: Int64);
@@ -436,6 +444,7 @@ type
     procedure SetPropTimeStamp(const Value: TTimeStamp);
     procedure SetPropTime(const Value: TTime);
     procedure SetPropCurrency(const Value: Currency);
+    procedure SetPropInt32(const Value: cardinal);
   public
     constructor Create;
     destructor Destroy; override;
@@ -443,6 +452,7 @@ type
     property PropString: string read FPropString write SetPropString;
     property PropAnsiString: AnsiString read FPropAnsiString write SetPropAnsiString;
     property PropInteger: Integer read FPropInteger write SetPropInteger;
+    property PropInt32: cardinal read FPropInt32 write SetPropInt32;
     property PropUInt32: cardinal read FPropUInt32 write SetPropUInt32;
     property PropInt64: Int64 read FPropInt64 write SetPropInt64;
     property PropUInt64: UInt64 read FPropUInt64 write SetPropUInt64;
@@ -455,6 +465,22 @@ type
     property PropTimeStamp: TTimeStamp read FPropTimeStamp write SetPropTimeStamp;
     property PropCurrency: Currency read FPropCurrency write SetPropCurrency;
     property PropJSONObject: TJSONObject read fPropJSONObject;
+
+    {sqids}
+    [MVCSerializeAsSqids]
+    property PropIntegerSqids: Integer read FPropIntegerSqids write FPropIntegerSqids;
+    [MVCSerializeAsSqids]
+    property PropInt16Sqids: Int16 read FPropInt16Sqids write FPropInt16Sqids;
+    [MVCSerializeAsSqids]
+    property PropUInt16Sqids: UInt16 read FPropUInt16Sqids write FPropUInt16Sqids;
+    [MVCSerializeAsSqids]
+    property PropInt32Sqids: Int32 read FPropInt32Sqids write FPropInt32Sqids;
+    [MVCSerializeAsSqids]
+    property PropUInt32Sqids: UInt32 read FPropUInt32Sqids write FPropUInt32Sqids;
+    [MVCSerializeAsSqids]
+    property PropInt64Sqids: Int64 read FPropInt64Sqids write FPropInt64Sqids;
+    [MVCSerializeAsSqids]
+    property PropUInt64Sqids: UInt64 read FPropUInt64Sqids write FPropUInt64Sqids;
   end;
 
   TMyChildObject = class
@@ -794,6 +820,7 @@ begin
   Result.PropString := 'Some text אטילעש';
   Result.PropAnsiString := 'This is an ANSI text';
   Result.PropInteger := -1234;
+  Result.PropInt32 := 1234;
   Result.PropUInt32 := 1234;
   Result.PropInt64 := -1234567890;
   Result.PropUInt64 := 1234567890;
@@ -812,6 +839,15 @@ begin
   Result.PropJSONObject.O['objprop'].S['innerprop1'] := 'value1';
   Result.PropJSONObject.O['objprop'].S['innerprop2'] := 'value2';
   Result.PropJSONObject.O['objprop'].S['innerprop3'] := 'value3';
+
+  {sqids}
+  Result.PropIntegerSqids := 1234;
+  Result.PropInt16Sqids := -12345;
+  Result.PropUInt16Sqids := 12345;
+  Result.PropInt32Sqids := 1234;
+  Result.PropUInt32Sqids := 1234;
+  Result.PropInt64Sqids := -1234567890;
+  Result.PropUInt64Sqids := 1234567890;
 end;
 
 constructor TMyObject.Create;
@@ -850,7 +886,18 @@ begin
   lMyStr := Self.fPropJSONObject.ToJSON();
   lOtherStr := Obj.PropJSONObject.ToJSON();
   Result := Result and (Self.fPropJSONObject.ToJSON() = Obj.PropJSONObject.ToJSON());
+
+
+  {sqids}
+  Result := Result and (Self.PropIntegerSqids = Obj.PropIntegerSqids);
+  Result := Result and (Self.PropInt16 = Obj.PropInt16);
+  Result := Result and (Self.PropUInt16 = Obj.PropUInt16);
+  Result := Result and (Self.PropInt32Sqids = Obj.PropInt32Sqids);
+  Result := Result and (Self.PropUInt32 = Obj.PropUInt32);
+  Result := Result and (Self.PropInt64 = Obj.PropInt64);
+  Result := Result and (Self.PropUInt64 = Obj.PropUInt64);
 end;
+
 
 procedure TMyObject.SetPropAnsiString(const Value: AnsiString);
 begin
@@ -880,6 +927,11 @@ end;
 procedure TMyObject.SetPropInt16(const Value: smallint);
 begin
   FPropInt16 := Value;
+end;
+
+procedure TMyObject.SetPropInt32(const Value: cardinal);
+begin
+  FPropInt32 := Value;
 end;
 
 procedure TMyObject.SetPropInt64(const Value: Int64);

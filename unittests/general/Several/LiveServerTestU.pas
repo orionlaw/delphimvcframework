@@ -2,7 +2,7 @@
 //
 // Delphi MVC Framework
 //
-// Copyright (c) 2010-2024 Daniele Teti and the DMVCFramework Team
+// Copyright (c) 2010-2025 Daniele Teti and the DMVCFramework Team
 //
 // https://github.com/danieleteti/delphimvcframework
 //
@@ -266,6 +266,19 @@ type
     [Test]
     procedure TestSerializeAndDeserializeNullables_Passing_Integers_InsteadOf_Floats;
 
+    //test sqids
+    [Test]
+    [TestCase('1', '1,Im1JUf')]
+    [TestCase('2','1234567890,LhXiwKz')]
+    [TestCase('3','9007199254740991,PTP7uQmcmk')]
+    procedure TestSqidSingle(IntValue: UInt64; Sqid: String);
+
+    [Test]
+    procedure TestWrongSqid;
+
+    [Test]
+    procedure TestInvalidConverter;
+
     // test responses objects
     [Test]
     procedure TestResponseCreated;
@@ -498,7 +511,7 @@ var
   res: IMVCRESTResponse;
 begin
   res := RESTClient.Get('/logout');
-  Assert.isTrue(res.StatusCode = HTTP_STATUS.OK, 'Logout Failed');
+  Assert.isTrue(res.StatusCode = HTTP_STATUS.OK, 'Logout Failed: ' + res.Content);
 end;
 
 procedure TBaseServerTest.Setup;
@@ -1069,7 +1082,7 @@ begin
     lPass := false;
     for lCookie in lRes.Cookies do
     begin
-      if lCookie.Value.Contains('invalid') then
+      if lCookie.Value.IsEmpty then
       begin
         lPass := true;
         Break;
@@ -1774,6 +1787,14 @@ begin
   c1.SessionId('');
   res := c1.Get('/session'); // rileggo il valore dalla sessione
   Assert.areEqual('', res.Content);
+end;
+
+procedure TServerTest.TestInvalidConverter;
+var
+  lRes: IMVCRESTResponse;
+begin
+  lRes := RESTClient.Get('/wrongconverter/1');
+  Assert.areEqual(500, lRes.StatusCode);
 end;
 
 procedure TServerTest.TestIssue406;
@@ -2834,6 +2855,19 @@ begin
   end;
 end;
 
+procedure TServerTest.TestSqidSingle(IntValue: UInt64; Sqid: String);
+var
+  lRes: IMVCRESTResponse;
+begin
+  lRes := RESTClient.Get('/sqids/itos/' + IntValue.ToString);
+  Assert.areEqual(200, lRes.StatusCode);
+  Assert.AreEqual(TMVCSqids.IntToSqid(IntValue), lRes.Content.Trim, '(local)');
+  Assert.AreEqual(Sqid, lRes.Content.Trim, '(remote)');
+  lRes := RESTClient.Get('/sqids/stoi/' + Sqid);
+  Assert.areEqual(200, lRes.StatusCode);
+  Assert.AreEqual<Int64>(IntValue, lRes.Content.Trim.ToInt64);
+end;
+
 procedure TServerTest.TestStringDictionary;
 var
   lRes: IMVCRESTResponse;
@@ -3024,6 +3058,14 @@ begin
   Assert.areEqual(HTTP_STATUS.BadRequest, lRes.StatusCode);
 end;
 
+procedure TServerTest.TestWrongSqid;
+var
+  lRes: IMVCRESTResponse;
+begin
+  lRes := RESTClient.Get('/sqids/itos/123456789123456789123456789123456789');
+  Assert.areEqual(400, lRes.StatusCode);
+end;
+
 procedure TServerTest.TestTypedDateTimeTypes;
 var
   res: IMVCRESTResponse;
@@ -3099,7 +3141,7 @@ var
   res: IMVCRESTResponse;
 begin
   res := RESTClient.AddPathParam('username', UserName).Get('/login/{username}');
-  Assert.isTrue(res.StatusCode = HTTP_STATUS.OK, 'Login Failed');
+  Assert.isTrue(res.StatusCode = HTTP_STATUS.OK, 'Login Failed: ' + res.Content);
 end;
 
 { TJSONRPCServerTest }

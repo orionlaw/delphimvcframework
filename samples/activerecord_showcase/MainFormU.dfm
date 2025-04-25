@@ -2,7 +2,7 @@ object MainForm: TMainForm
   Left = 0
   Top = 0
   Caption = 'TMVCActiveRecord - ShowCase'
-  ClientHeight = 660
+  ClientHeight = 698
   ClientWidth = 1094
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -14,7 +14,7 @@ object MainForm: TMainForm
   OnShow = FormShow
   DesignSize = (
     1094
-    660)
+    698)
   TextHeight = 13
   object btnCRUD: TButton
     Left = 8
@@ -38,7 +38,7 @@ object MainForm: TMainForm
     Left = 280
     Top = 8
     Width = 806
-    Height = 644
+    Height = 682
     Anchors = [akLeft, akTop, akRight, akBottom]
     Ctl3D = True
     DoubleBuffered = True
@@ -328,8 +328,14 @@ object MainForm: TMainForm
     TabOrder = 32
     OnClick = btnTransactionClick
   end
-  object FDConnection1: TFDConnection
-    Left = 312
-    Top = 40
+  object btnUseExplicitConnection: TButton
+    Left = 8
+    Top = 643
+    Width = 121
+    Height = 34
+    Caption = 'Use Explicit Connection'
+    TabOrder = 33
+    WordWrap = True
+    OnClick = btnUseExplicitConnectionClick
   end
 end

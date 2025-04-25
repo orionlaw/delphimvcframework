@@ -2,7 +2,7 @@
 //
 // Delphi MVC Framework
 //
-// Copyright (c) 2010-2024 Daniele Teti and the DMVCFramework Team
+// Copyright (c) 2010-2025 Daniele Teti and the DMVCFramework Team
 //
 // https://github.com/danieleteti/delphimvcframework
 //
@@ -43,15 +43,16 @@ uses
   System.Generics.Collections,
   MVCFramework.DuckTyping,
   JsonDataObjects,
-  MVCFramework.DotEnv, MVCFramework.Container;
+  MVCFramework.DotEnv,
+  MVCFramework.Container,
+  sqids;
 
 {$I dmvcframeworkbuildconsts.inc}
 
 
 type
 
-  TMVCHTTPMethodType = (httpGET, httpPOST, httpPUT, httpDELETE, httpPATCH, httpHEAD, httpOPTIONS,
-    httpTRACE);
+  TMVCHTTPMethodType = (httpGET, httpPOST, httpPUT, httpDELETE, httpPATCH, httpHEAD, httpOPTIONS, httpTRACE);
 
   TMVCHTTPMethods = set of TMVCHTTPMethodType;
 
@@ -107,6 +108,7 @@ type
     ISO88598 = 'ISO-8859-8';
     ISO885915 = 'ISO-8859-15';
     UTF_8 = 'UTF-8';
+    UTF_8_WITHOUT_DASH = 'UTF8'; {this is wrong, but it is a quite common notation}
     UTF_16 = 'UTF-16';
     UTF_16BE = 'UTF-16BE';
     UTF_16LE = 'UTF-16LE';
@@ -115,20 +117,20 @@ type
   TMVCConstants = record
   public const
     SESSION_TOKEN_NAME = 'dtsessionid';
-    DEFAULT_CONTENT_CHARSET = 'UTF-8';
+    DEFAULT_CONTENT_CHARSET = TMVCCharSet.UTF_8;
     DEFAULT_CONTENT_TYPE = TMVCMediaType.APPLICATION_JSON;
     CURRENT_USER_SESSION_KEY = '__DMVC_CURRENT_USER__';
     LAST_AUTHORIZATION_HEADER_VALUE = '__DMVC_LAST_AUTHORIZATION_HEADER_VALUE_';
     SSE_RETRY_DEFAULT = 100;
     SSE_LAST_EVENT_ID = 'Last-Event-ID';
-    URL_MAPPED_PARAMS_ALLOWED_CHARS = ' אטישעל''"@\[\]\{\}\(\)\=;&#\.:!\_,%\w\d\x2D\x3A\$';
+    URL_MAPPED_PARAMS_ALLOWED_CHARS = ' אטישעל''"@\?\[\]\{\}\(\)\=;&#\.:!\_,%\w\d\x2D\x3A\$';
     OneMiB = 1048576;
     OneKiB = 1024;
     DEFAULT_MAX_REQUEST_SIZE = OneMiB * 5; // 5 MiB
     HATEOAS_PROP_NAME = 'links';
     X_HTTP_Method_Override = 'X-HTTP-Method-Override';
     MAX_RECORD_COUNT = 100;
-    COPYRIGHT = 'Copyright (c) 2010-2024 Daniele Teti and the DMVCFramework Team';
+    COPYRIGHT = 'Copyright (c) 2010-2025 Daniele Teti and the DMVCFramework Team';
   end;
 
   HATEOAS = record
@@ -149,7 +151,7 @@ type
 
   TMVCConfigKey = record
   public const
-    SessionTimeout = 'sessiontimeout';
+    //SessionTimeout = 'sessiontimeout';
     ViewPath = 'view_path';
     ViewCache = 'view_cache';
     DefaultContentType = 'default_content_type';
@@ -160,11 +162,12 @@ type
     ServerName = 'server_name';
     ExposeServerSignature = 'server_signature';
     ExposeXPoweredBy = 'xpoweredby';
-    SessionType = 'session_type';
+    //SessionType = 'session_type';
     MaxEntitiesRecordCount = 'max_entities_record_count';
     MaxRequestSize = 'max_request_size'; // bytes
     HATEOSPropertyName = 'hateos';
     LoadSystemControllers = 'load_system_controllers';
+    ErrorPageURL = 'error_page_url';
   end;
 
   TMVCHostingFrameworkType = (hftUnknown, hftIndy, hftApache, hftISAPI);
@@ -405,7 +408,7 @@ type
   protected
     { protected declarations }
   public
-    { public declarations }
+    constructor Create; reintroduce;
   end;
 
   EMVCConfigException = class(EMVCException)
@@ -417,7 +420,7 @@ type
     { public declarations }
   end;
 
-  EMVCFrameworkViewException = class(EMVCException)
+  EMVCSSVException = class(EMVCException)
   private
     { private declarations }
   protected
@@ -495,6 +498,7 @@ type
     function TryGetValue(const Name: string; out Value: string): Boolean; overload;
     function TryGetValue(const Name: string; out Value: Integer): Boolean; overload;
     function Count: Integer;
+    function Remove(const Name: string): TMVCStringDictionary;
     function GetEnumerator: TDictionary<string, string>.TPairEnumerator;
     function ContainsKey(const Key: string): Boolean;
     function Keys: TArray<string>;
@@ -537,13 +541,22 @@ type
     constructor Create;
   end;
 
-  TMVCViewDataSet = class(TObjectDictionary<string, TDataset>)
+  TMVCStringPair = class
   private
-    { private declarations }
-  protected
-    { protected declarations }
+    FKey: String;
+    FValue: String;
+    procedure SetKey(const Value: String);
+    procedure SetValue(const Value: String);
   public
-    constructor Create;
+    property Key: String read FKey write SetKey;
+    property Value: String read FValue write SetValue;
+    constructor Create(const Key, Value: String);
+  end;
+
+  TMVCStringPairList = class(TObjectList<TMVCStringPair>)
+  public
+    constructor Create; virtual;
+    function AddPair(const Key, Value: String): TMVCStringPairList;
   end;
 
   TMVCCriticalSectionHelper = class helper for TCriticalSection
@@ -637,7 +650,9 @@ var
   /// When MVCSerializeNulls = False empty nullables and nil are not serialized at all.
   /// </summary>
   MVCSerializeNulls: Boolean = True;
+
 { GLOBAL CONFIG VARS // END}
+
 
 function AppPath: string;
 function IsReservedOrPrivateIP(const AIP: string): Boolean; inline;
@@ -669,6 +684,7 @@ function BuildContentType(const aContentMediaType: string; const aContentCharSet
 function StrToJSONObject(const aString: String; ARaiseExceptionOnError: Boolean = False): TJsonObject;
 function StrToJSONArray(const aString: String; ARaiseExceptionOnError: Boolean = False): TJsonArray;
 function ObjectToJSONObject(const aObject: TObject): TJSONObject;
+function ObjectToJSONObjectStr(const aObject: TObject): String;
 
 function WrapAsList(const AObject: TObject; AOwnsObject: Boolean = False): IMVCList;
 
@@ -774,19 +790,62 @@ type
       VPassword: string; var VHandled: Boolean);
   end;
 
+  TMVCSqids = class sealed
+  private
+    class var fInstance: TSqids;
+    class function GetInstance: TSqids;
+  public
+    const DEFAULT_ALPHABET = sqids.DEFAULT_ALPHABET;
+    const DEFAULT_MIN_LENGTH  = sqids.DEFAULT_MIN_LENGTH;
+    const MIN_ALPHABET_LENGTH = sqids.MIN_ALPHABET_LENGTH;
+    const MAX_ALPHABET_LENGTH = sqids.MAX_ALPHABET_LENGTH;
+    class var SQIDS_ALPHABET: String;
+    class var SQIDS_MIN_LENGTH: Integer;
+    class destructor Destroy;
+    { sqids }
+    class function SqidToInt(const Sqid: String): UInt64;
+    class function IntToSqid(const Value: UInt64): String;
+  end;
+
+  IMVCSqidsEncoder = interface
+    ['{DFD71A1A-36B0-4EC6-8E8E-35405BB93CA7}']
+    function Encode(aNumbers: TArray<UInt64>): string;
+    function EncodeSingle(aNumber: UInt64): string;
+    function Decode(aId: string): TArray<UInt64>;
+    function DecodeSingle(aId: string): UInt64;
+  end;
+
+  TMVCSqidsEncoder = class(TInterfacedObject, IMVCSqidsEncoder)
+  protected
+    fSqids: TSqids;
+  public
+    constructor Create(AAlphabet: string; AMinLength: Byte; ABlockList: TArray<string>); overload;
+    constructor Create(AAlphabet: string = DEFAULT_ALPHABET; AMinLength: Byte = DEFAULT_MIN_LENGTH); overload;
+    constructor Create(AMinLength: Byte); overload;
+    constructor Create(ABlockList: TArray<string>); overload;
+    function Encode(aNumbers: TArray<UInt64>): string;
+    function EncodeSingle(aNumber: UInt64): string;
+    function Decode(aId: string): TArray<UInt64>;
+    function DecodeSingle(aId: string): UInt64;
+  end;
+
+
 function dotEnv: IMVCDotEnv; overload;
 procedure dotEnvConfigure(const dotEnvDelegate: TFunc<IMVCDotEnv>);
+
 
 implementation
 
 uses
+  MVCFramework,
   IdCoder3to4,
   System.NetEncoding,
   System.Character,
   MVCFramework.Serializer.JsonDataObjects,
-  MVCFramework.Serializer.Commons,
   MVCFramework.Utils,
-  System.RegularExpressions, MVCFramework.Logger;
+  System.RegularExpressions,
+  MVCFramework.Logger,
+  MVCFramework.Serializer.Commons;
 
 var
   GlobalAppName, GlobalAppPath, GlobalAppExe: string;
@@ -794,6 +853,38 @@ var
 var
   GdotEnv: IMVCDotEnv = nil;
   GdotEnvDelegate: TFunc<IMVCDotEnv> = nil;
+
+class destructor TMVCSqids.Destroy;
+begin
+  FreeAndNil(fInstance);
+end;
+
+class function TMVCSqids.GetInstance: TSqids;
+begin
+  if fInstance = nil then
+  begin
+    TMonitor.Enter(gLock);
+    try
+      if fInstance = nil then
+      begin
+        fInstance := TSqids.Create(SQIDS_ALPHABET, SQIDS_MIN_LENGTH);
+      end;
+    finally
+      TMonitor.Exit(gLock);
+    end;
+  end;
+  Result := fInstance;
+end;
+
+class function TMVCSqids.IntToSqid(const Value: UInt64): String;
+begin
+  Result := GetInstance.EncodeSingle(Value);
+end;
+
+class function TMVCSqids.SqidToInt(const Sqid: String): UInt64;
+begin
+  Result := GetInstance.DecodeSingle(Sqid);
+end;
 
 function URLEncode(const Value: string): string; overload;
 begin
@@ -847,11 +938,6 @@ begin
     if (IntIP >= IP2Long(RESERVED_IPv4[I][1])) and (IntIP <= IP2Long(RESERVED_IPv4[I][2])) then
       Exit(True);
 end;
-
-// function IP2Long(const AIP: string): UInt32;
-// begin
-// Result := IdGlobal.IPv4ToUInt32(AIP);
-// end;
 
 function B64Encode(const aValue: string): string; overload;
 begin
@@ -1235,6 +1321,12 @@ begin
   Result := fDict.Keys.ToArray;
 end;
 
+function TMVCStringDictionary.Remove(const Name: string): TMVCStringDictionary;
+begin
+  fDict.Remove(Name);
+  Result := Self;
+end;
+
 procedure TMVCStringDictionary.SetItems(const Key, Value: string);
 begin
   fDict.AddOrSetValue(Key, Value);
@@ -1400,10 +1492,10 @@ end;
 
 { TMVCViewDataSet }
 
-constructor TMVCViewDataSet.Create;
-begin
-  inherited Create([]);
-end;
+//constructor TMVCViewDataSet.Create;
+//begin
+//  inherited Create([]);
+//end;
 
 { TMVCStreamHelper }
 
@@ -1711,6 +1803,18 @@ begin
   end;
 end;
 
+function ObjectToJSONObjectStr(const aObject: TObject): String;
+var
+  lJSON: TJsonObject;
+begin
+  lJSON := ObjectToJSONObject(aObject);;
+  try
+    Result := lJSON.ToJSON(True);
+  finally
+    lJSON.Free;
+  end;
+end;
+
 function StrToJSONObject(const aString: String; ARaiseExceptionOnError: Boolean = False): TJsonObject;
 begin
   Result := MVCFramework.Utils.StrToJSONObject(aString, ARaiseExceptionOnError);
@@ -1798,14 +1902,14 @@ begin
       begin
         if not Assigned(GdotEnvDelegate) then
         begin
-          LogI('dotEnvConfigure not called, a default dotEnv instance will be created');
+          LogI('Initializing default dotEnv instance');
           GdotEnv := NewDotEnv
                        .UseStrategy(TMVCDotEnvPriority.FileThenEnv)
                        .UseProfile('test')
                        .UseProfile('prod')
                        .UseLogger(procedure(LogItem: String)
                                   begin
-                                    LogD('dotEnv: ' + LogItem);
+                                    LogI('dotEnv: ' + LogItem);
                                   end)
                        .Build();
         end
@@ -1825,6 +1929,89 @@ begin
   Result := GdotEnv;
 end;
 
+{ TMVCSqidsEncoder }
+
+constructor TMVCSqidsEncoder.Create(AAlphabet: string; AMinLength: Byte;
+  ABlockList: TArray<string>);
+begin
+  inherited Create;
+  fSqids := TSqids.Create(AAlphabet,AMinLength, ABlockList);
+end;
+
+constructor TMVCSqidsEncoder.Create(AAlphabet: string; AMinLength: Byte);
+begin
+  Create(AAlphabet, AMinLength, DEFAULT_BLOCKLIST);
+end;
+
+constructor TMVCSqidsEncoder.Create(AMinLength: Byte);
+begin
+  Create(DEFAULT_ALPHABET, AMinLength, DEFAULT_BLOCKLIST);
+end;
+
+constructor TMVCSqidsEncoder.Create(ABlockList: TArray<string>);
+begin
+  Create(DEFAULT_ALPHABET, DEFAULT_MIN_LENGTH, ABlockList);
+end;
+
+function TMVCSqidsEncoder.Decode(AId: string): TArray<UInt64>;
+begin
+  Result := fSqids.Decode(AId);
+end;
+
+function TMVCSqidsEncoder.DecodeSingle(AId: string): UInt64;
+begin
+  Result := fSqids.DecodeSingle(AId);
+end;
+
+function TMVCSqidsEncoder.Encode(ANumbers: TArray<UInt64>): string;
+begin
+  Result := fSqids.Encode(ANumbers);
+end;
+
+function TMVCSqidsEncoder.EncodeSingle(ANumber: UInt64): string;
+begin
+  Result := fSqids.EncodeSingle(ANumber);
+end;
+
+{ TMVCStringPair }
+
+constructor TMVCStringPair.Create(const Key, Value: String);
+begin
+  inherited Create;
+  FKey := Key;
+  FValue := Value;
+end;
+
+procedure TMVCStringPair.SetKey(const Value: String);
+begin
+  FKey := Value;
+end;
+
+procedure TMVCStringPair.SetValue(const Value: String);
+begin
+  FValue := Value;
+end;
+
+{ TMVCStringPairList }
+
+function TMVCStringPairList.AddPair(const Key, Value: String): TMVCStringPairList;
+begin
+  Add(TMVCStringPair.Create(Key, Value));
+  Result := Self;
+end;
+
+constructor TMVCStringPairList.Create;
+begin
+  inherited Create(True);
+end;
+
+{ EMVCSessionExpiredException }
+
+constructor EMVCSessionExpiredException.Create;
+begin
+  inherited Create(HTTP_STATUS.Unauthorized, 'Session expired');
+end;
+
 initialization
 
 gLock := TObject.Create;
@@ -1839,6 +2026,6 @@ GlobalAppPath := IncludeTrailingPathDelimiter(ExtractFilePath(GetModuleName(HIns
 
 finalization
 
-FreeAndNil(gLock);
+FreeAndNil(GLock);
 
 end.

@@ -39,7 +39,7 @@ type
     [MVCPath('/deleteperson')]
     [MVCHTTPMethods([httpPOST])]
     [MVCConsumes(TMVCMediaType.APPLICATION_FORM_URLENCODED)]
-    procedure DeletePerson;
+    procedure DeletePerson([MVCFromContentField('guid')] const GUID: String);
 
     [MVCPath('/new')]
     [MVCHTTPMethods([httpGET])]
@@ -64,7 +64,7 @@ type
     [MVCPath('/loadviewtest')]
     [MVCHTTPMethods([httpGET])]
     [MVCProduces(TMVCMediaType.TEXT_PLAIN)]
-    procedure LoadViewTest;
+    function LoadViewTest: String;
   end;
 
 implementation
@@ -75,14 +75,12 @@ uses System.SysUtils, Web.HTTPApp, FireDAC.Stan.Intf, FireDAC.Stan.Option,
   FireDAC.Stan.Param, FireDAC.Stan.Error, FireDAC.DatS, FireDAC.Phys.Intf, FireDAC.DApt.Intf, Data.DB,
   FireDAC.Comp.DataSet, FireDAC.Comp.Client;
 
-procedure TWebSiteController.DeletePerson;
+procedure TWebSiteController.DeletePerson(const GUID: String);
 var
-  lGUID: string;
   LDAL: IPeopleDAL;
 begin
-  lGUID := Context.Request.Params['guid'];
   LDAL := TServicesFactory.GetPeopleDAL;
-  LDAL.DeleteByGUID(lGUID);
+  LDAL.DeleteByGUID(GUID);
   Redirect('/people');
 end;
 
@@ -108,9 +106,10 @@ begin
       begin
         var lJItm := lJDevices.AddObject;
         lJItm.S['name'] := lItem;
-        lJItm.B['selected'] := TArray.BinarySearch<String>(lDevices, lItem, lIdx);
+        lJItm.B['selected'] := TArray.BinarySearch<String>(lPerson.Devices, lItem, lIdx);
       end;
-      Result := Page(['editperson'], lJObj);
+      ViewData['model'] := lJObj;
+      Result := RenderView('editperson');
     finally
       lJObj.Free;
     end;
@@ -142,7 +141,7 @@ begin
   lPeople := LDAL.GetPeople;
   try
     ViewData['people'] := lPeople;
-    Result := PageFragment(['people_header.csv', 'people_list.csv']);
+    Result := RenderViews(['people_header.csv', 'people_list.csv']);
   finally
     lPeople.Free;
   end;
@@ -153,7 +152,7 @@ begin
   Redirect('/people');
 end;
 
-procedure TWebSiteController.LoadViewTest;
+function TWebSiteController.LoadViewTest: String;
 var
   lDS: TFDMemTable;
 begin
@@ -170,8 +169,7 @@ begin
     lDS.First;
 
     ViewData['people'] := lDS;
-    LoadView(['people_list_test','people_list_test']);
-    RenderResponseStream;
+    Result := RenderViews(['people_list_test','people_list_test']);
   finally
     lDS.Free;
   end;
@@ -194,7 +192,7 @@ begin
         ViewData['people'] := lPeople;
         ViewData['people2'] := lPeople2;
         ViewData['myobj'] := lMyObj;
-        Result := Page(['showcase'], False);
+        Result := RenderView('showcase', False, nil);
       finally
         lMyObj.Free;
       end;
@@ -223,7 +221,8 @@ begin
       lJItm.S['name'] := lItem;
       lJItm.B['selected'] := False;
     end;
-    Result := Page(['editperson'], lJObj);
+    ViewData['model'] := lJObj;
+    Result := RenderView('editperson');
   finally
     lJObj.Free;
   end;
@@ -248,11 +247,10 @@ begin
   lPeople := LDAL.GetPeople;
   try
     ViewData['people'] := lPeople;
-    Result := Page(['people_list']);
+    Result := RenderView('people_list');
   finally
     lPeople.Free;
   end;
-
 end;
 
 procedure TWebSiteController.SavePerson(const [MVCFromBody] Person: TPerson);

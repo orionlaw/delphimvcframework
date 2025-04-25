@@ -25,7 +25,7 @@ package dmvcframeworkRT;
 {$IMAGEBASE $400000}
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
-{$DESCRIPTION 'DMVCFramework - CopyRight (2010-2023) Daniele Teti and the DMVCFramework Team'}
+{$DESCRIPTION 'DMVCFramework - CopyRight (2010-2024) Daniele Teti and the DMVCFramework Team'}
 {$LIBSUFFIX '120'}
 {$RUNONLY}
 {$IMPLICITBUILD ON}
@@ -38,9 +38,9 @@ requires
   IndyProtocols,
   FireDACIBDriver,
   FireDACMySQLDriver,
-  loggerproRT,
   FireDACPgDriver,
   FireDACSqliteDriver,
+  loggerproRT,
   SwagDoc;
 
 contains
@@ -56,7 +56,6 @@ contains
   MVCFramework.Middleware.ETag in '..\..\sources\MVCFramework.Middleware.ETag.pas',
   MVCFramework.ActiveRecord in '..\..\sources\MVCFramework.ActiveRecord.pas',
   MVCFramework.ActiveRecordController in '..\..\sources\MVCFramework.ActiveRecordController.pas',
-  MVCFramework.ApplicationSession in '..\..\sources\MVCFramework.ApplicationSession.pas',
   MVCFramework.Cache in '..\..\sources\MVCFramework.Cache.pas',
   MVCFramework.Commons in '..\..\sources\MVCFramework.Commons.pas',
   MVCFramework.Console in '..\..\sources\MVCFramework.Console.pas',
@@ -117,7 +116,17 @@ contains
   MVCFramework.Serializer.URLEncoded in '..\..\sources\MVCFramework.Serializer.URLEncoded.pas',
   MVCFramework.Signal in '..\..\sources\MVCFramework.Signal.pas',
   MVCFramework.Serializer.Text in '..\..\sources\MVCFramework.Serializer.Text.pas',
-  MVCFramework.Container in '..\..\sources\MVCFramework.Container.pas';
+  MVCFramework.Container in '..\..\sources\MVCFramework.Container.pas',
+  sqids in '..\..\sources\sqids.pas',
+  MVCFramework.View.Renderers.TemplatePro in '..\..\sources\MVCFramework.View.Renderers.TemplatePro.pas',
+  TemplatePro in '..\..\sources\TemplatePro.pas',
+  MVCFramework.Session.Database in '..\..\sources\MVCFramework.Session.Database.pas',
+  MVCFramework.SQLGenerators.MSSQL in '..\..\sources\MVCFramework.SQLGenerators.MSSQL.pas',
+  MVCFramework.RQL.AST2MSSQL in '..\..\sources\MVCFramework.RQL.AST2MSSQL.pas',
+  MVCFramework.Middleware.Session.Internal in '..\..\sources\MVCFramework.Middleware.Session.Internal.pas',
+  MVCFramework.HTMX in '..\..\sources\MVCFramework.HTMX.pas',
+  MVCFramework.IntfObjectPool in '..\..\sources\MVCFramework.IntfObjectPool.pas',
+  MVCFramework.ObjectPool in '..\..\sources\MVCFramework.ObjectPool.pas';
 
 end.
 

@@ -2,7 +2,7 @@
 //
 // Delphi MVC Framework
 //
-// Copyright (c) 2010-2024 Daniele Teti and the DMVCFramework Team
+// Copyright (c) 2010-2025 Daniele Teti and the DMVCFramework Team
 //
 // https://github.com/danieleteti/delphimvcframework
 //
@@ -110,7 +110,9 @@ type
     procedure DoBeforeRequest(aRequest: IHTTPRequest);
     procedure DoRequestCompleted(aResponse: IHTTPResponse; var aHandled: Boolean);
     procedure DoResponseCompleted(aMVCRESTResponse: IMVCRESTResponse);
+{$IF defined(SYDNEYORBETTER)}
     procedure DoOnSendDataEvent(const Sender: TObject; AContentLength, AWriteCount: Int64; var AAbort: Boolean);
+{$ENDIF}
     function GetBodyFormData: TMultipartFormData;
     function ObjectIsList(aObject: TObject): Boolean;
     function SerializeObject(aObject: TObject): string;
@@ -190,7 +192,9 @@ type
     /// <summary>
     /// Executes while sending data
     /// </summary>
+    {$IF defined(SYDNEYORBETTER)}
     function SetSendDataProc(aSendDataProc: TSendDataProc): IMVCRESTClient;
+    {$ENDIF}
 
     ///<summary>
     /// Set the client certificate for the request</summary>
@@ -391,6 +395,10 @@ type
     function AddFile(const aFileName: string; const aContentType: string = ''): IMVCRESTClient; overload;
 {$IF defined(RIOORBETTER)}
     function AddFile(const aName: string; aFileStreamValue: TStream; const aFileName: string = '';
+      const aContentType: string = ''): IMVCRESTClient; overload;
+{$ENDIF}
+{$IF defined(ATHENSORBETTER)}
+    function AddFile(const aName: string; aFileStreamValue: TStream; aOwnsStream: Boolean; const aFileName: string = '';
       const aContentType: string = ''): IMVCRESTClient; overload;
 {$ENDIF}
 
@@ -717,11 +725,18 @@ end;
 function TMVCRESTClient.AddFile(const aName: string; aFileStreamValue: TStream; const aFileName, aContentType: string): IMVCRESTClient;
 begin
   Result := Self;
-  {$IF Defined(ATHENSORBETTER)}
-  GetBodyFormData.AddStream(aName, aFileStreamValue, False, aFileName, aContentType);
-  {$ELSE}
+{$WARNINGS OFF}
   GetBodyFormData.AddStream(aName, aFileStreamValue, aFileName, aContentType);
-  {$ENDIF}
+{$WARNINGS ON}
+  SetContentType(TMVCMediaType.MULTIPART_FORM_DATA);
+end;
+{$ENDIF}
+
+{$IF defined(ATHENSORBETTER)}
+function TMVCRESTClient.AddFile(const aName: string; aFileStreamValue: TStream; aOwnsStream: Boolean; const aFileName, aContentType: string): IMVCRESTClient;
+begin
+  Result := Self;
+  GetBodyFormData.AddStream(aName, aFileStreamValue, aOwnsStream, aFileName, aContentType);
   SetContentType(TMVCMediaType.MULTIPART_FORM_DATA);
 end;
 {$ENDIF}
@@ -958,7 +973,9 @@ begin
   fHTTPClient.OnValidateServerCertificate := DoValidateServerCertificate;
   fHTTPClient.HandleRedirects := True;
   fHTTPClient.MaxRedirects := TMVCRESTClientConsts.DEFAULT_MAX_REDIRECTS;
+{$IF defined(SYDNEYORBETTER)}
   fHTTPClient.OnSendData := DoOnSendDataEvent;
+{$ENDIF}
 {$IF defined(TOKYOORBETTER)}
   fHTTPClient.SecureProtocols := CHTTPDefSecureProtocols;
 {$ENDIF}
@@ -1520,6 +1537,7 @@ begin
   Result := fRttiContext.GetType(aObject.ClassType).GetMethod('GetEnumerator') <> nil;
 end;
 
+{$IF defined(SYDNEYORBETTER)}
 procedure TMVCRESTClient.DoOnSendDataEvent(const Sender: TObject; AContentLength,
   AWriteCount: Int64; var AAbort: Boolean);
 begin
@@ -1528,6 +1546,7 @@ begin
     fSendDataProc(AContentLength, AWriteCount, AAbort);
   end;
 end;
+{$ENDIF}
 
 function TMVCRESTClient.Options: IMVCRESTResponse;
 begin
@@ -1896,11 +1915,13 @@ begin
   fResponseCompletedProc := aResponseCompletedProc;
 end;
 
+{$IF Defined(SYDNEYORBETTER)}
 function TMVCRESTClient.SetSendDataProc(
   aSendDataProc: TSendDataProc): IMVCRESTClient;
 begin
   fSendDataProc := aSendDataProc;
 end;
+{$ENDIF}
 
 function TMVCRESTClient.SetValidateServerCertificateProc(
   aValidateCertificateProc: TValidateServerCertificateProc): IMVCRESTClient;

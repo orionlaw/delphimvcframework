@@ -2,7 +2,7 @@
 //
 // Delphi MVC Framework
 //
-// Copyright (c) 2010-2024 Daniele Teti and the DMVCFramework Team
+// Copyright (c) 2010-2025 Daniele Teti and the DMVCFramework Team
 //
 // https://github.com/danieleteti/delphimvcframework
 //
@@ -346,7 +346,16 @@ begin
   end
   else
   begin
-    if not TryStrToBool(lTmp.Trim, Result) then
+    lTmp := lTmp.Trim.ToLower;
+    if (lTmp = 'yes') or (lTmp='1') or (lTmp='true') then
+    begin
+      Exit(True);
+    end;
+    if (lTmp = 'no') or (lTmp='0') or (lTmp='false') then
+    begin
+      Exit(False);
+    end;
+    if not TryStrToBool(lTmp, Result) then
     begin
       raise EMVCDotEnv.CreateFmt('Env "%s" is not a valid boolean [Current Value: "%s"]', [Name, lTmp]);
     end;

@@ -2,7 +2,7 @@
 //
 // Delphi MVC Framework
 //
-// Copyright (c) 2010-2024 Daniele Teti and the DMVCFramework Team
+// Copyright (c) 2010-2025 Daniele Teti and the DMVCFramework Team
 //
 // https://github.com/danieleteti/delphimvcframework
 //
@@ -85,9 +85,6 @@ type
     procedure TestPathPrefix;
     [Test]
     procedure TestReservedIPs;
-    // procedure TestRoutingSpeed;
-
-    // objects mappers
   end;
 
   [TestFixture]
@@ -288,6 +285,22 @@ type
     procedure TestInLineComments;
   end;
 
+  [TestFixture]
+  TTestSqids = class(TObject)
+  public
+    [Test]
+    procedure TestSingle;
+  end;
+
+  [TestFixture]
+  TTestRQLCompiler = class(TObject)
+  public
+    [Test]
+    procedure TestFileFixtures;
+  end;
+
+
+
 implementation
 
 {$WARN SYMBOL_DEPRECATED OFF}
@@ -298,6 +311,7 @@ uses
   Web.HTTPApp, Soap.EncdDecd,
   IdHashMessageDigest, idHash,
   System.Threading,
+  MVCFramework.RQL.Parser,
   MVCFramework.HMAC, System.Diagnostics,
   MVCFramework.LRUCache,
 
@@ -2396,6 +2410,53 @@ begin
 end;
 
 
+{ TTestSqids }
+
+procedure TTestSqids.TestSingle;
+begin
+  Assert.AreEqual('Im1JUf',TMVCSqids.IntToSqid(1)); {https://sqids.org/playground}
+  Assert.AreEqual<Integer>(1, TMVCSqids.SqidToInt(TMVCSqids.IntToSqid(1)));
+end;
+
+{ TTestRQLCompiler }
+
+procedure TTestRQLCompiler.TestFileFixtures;
+var
+  lParser: TRQL2SQL;
+  lSQL, lBasePath: string;
+begin
+  lBasePath := AppPath;
+  lParser := TRQL2SQL.Create;
+  try
+    for var lCompName in TRQLCompilerRegistry.Instance.RegisteredCompilers do
+    begin
+      var lComp := TRQLCompilerRegistry.Instance.GetCompiler(lCompName).Create(nil);
+      try
+        Assert.IsNotNull(lComp, 'Cannot create compiler ' + lCompName);
+
+        var lRQLs := TFile.ReadAllLines(TPath.Combine(lBasePath, '..\RQLFixtures\RQL_' + lComp.ClassName + '.fixture'));
+        var lSQLs := TFile.ReadAllLines(TPath.Combine(lBasePath, '..\RQLFixtures\SQL_' + lComp.ClassName + '.fixture'));
+        Assert.AreEqual(Length(lRQLs), Length(lSQLs), 'Test case for RQL different from test cases for SQL, for compiler ' + lComp.ClassName);
+        for var I := 0 to Length(lRQLs) - 1 do
+        begin
+          try
+            lParser.Execute(lRQLs[I], lSQL, lComp);
+          except
+            on E: Exception do
+            begin
+              lSQL := 'ERROR:' + E.Message;
+            end;
+          end;
+          Assert.AreEqual(lSQLs[I], lSQL, 'Wrong compilation for "' + lSQLs[I] + '" - Compiler ' + lComp.ClassName);
+        end;
+      finally
+        lComp.Free;
+      end;
+    end;
+  finally
+    lParser.Free;
+  end;
+end;
 
 initialization
 
@@ -2408,6 +2469,8 @@ TDUnitX.RegisterTestFixture(TTestCryptUtils);
 TDUnitX.RegisterTestFixture(TTestLRUCache);
 TDUnitX.RegisterTestFixture(TTestDotEnv);
 TDUnitX.RegisterTestFixture(TTestDotEnvParser);
+TDUnitX.RegisterTestFixture(TTestSqids);
+TDUnitX.RegisterTestFixture(TTestRQLCompiler);
 
 finalization
 

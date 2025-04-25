@@ -28,8 +28,8 @@ uses
   MVCFramework.Nullables,
   MVCFramework.ActiveRecord,
   MVCFramework.Logger,
-
-  System.Generics.Collections, System.Diagnostics;
+  System.Generics.Collections,
+  System.Diagnostics;
 
 type
   TMainForm = class(TForm)
@@ -42,7 +42,6 @@ type
     btnMultiThreading: TButton;
     btnRQL: TButton;
     btnReadOnlyFields: TButton;
-    FDConnection1: TFDConnection;
     btnNullTest: TButton;
     btnCRUDNoAutoInc: TButton;
     btnCRUDWithStringPKs: TButton;
@@ -67,6 +66,7 @@ type
     btnCustomTable: TButton;
     btnCRUDWithOptions: TButton;
     btnTransaction: TButton;
+    btnUseExplicitConnection: TButton;
     procedure btnCRUDClick(Sender: TObject);
     procedure btnInheritanceClick(Sender: TObject);
     procedure btnMultiThreadingClick(Sender: TObject);
@@ -102,6 +102,7 @@ type
     procedure btnCustomTableClick(Sender: TObject);
     procedure btnCRUDWithOptionsClick(Sender: TObject);
     procedure btnTransactionClick(Sender: TObject);
+    procedure btnUseExplicitConnectionClick(Sender: TObject);
   private
     procedure Log(const Value: string);
     procedure LoadCustomers(const HowManyCustomers: Integer = 50);
@@ -839,13 +840,11 @@ procedure TMainForm.btnMultiThreadingClick(Sender: TObject);
 var
   lTasks: TArray<ITask>;
   lProc: TProc;
-  lConnParams: string;
 begin
   Log('** Multithreading test');
   TMVCActiveRecord.DeleteRQL(TCustomer,
     'in(City,["Rome","New York","London","Melbourne","Berlin"])');
 
-  lConnParams := FDConnection1.Params.Text;
   lProc := procedure
            var
              lCustomer: TCustomer;
@@ -1974,6 +1973,49 @@ begin
 
 end;
 
+procedure TMainForm.btnUseExplicitConnectionClick(Sender: TObject);
+var
+  lCustomer: TCustomer;
+  lID: Integer;
+  lTestNote: string;
+  lConn: TFDConnection;
+begin
+  Log('** Use Explicit Connection');
+  lConn := TFDConnection.Create(nil);
+  try
+    lConn.ConnectionDefName := CON_DEF_NAME;
+    lCustomer := TCustomer.Create(lConn);
+    try
+      Log('Entity ' + TCustomer.ClassName + ' is mapped to table ' + lCustomer.TableName);
+      lCustomer.CompanyName := 'Google Inc.';
+      lCustomer.City := 'Montain View, CA';
+      lCustomer.Note := 'Μῆνιν ἄειδε θεὰ Πηληϊάδεω Ἀχιλῆος οὐλομένην 😁';
+      lCustomer.LastContact := Now();
+      lCustomer.Insert;
+      lID := lCustomer.ID;
+      Log('Just inserted Customer ' + lID.ToString);
+    finally
+      lCustomer.Free;
+    end;
+
+    lCustomer := TCustomer.Create(lConn);
+    try
+      lCustomer.LoadByPK(lID);
+      Assert(not lCustomer.Code.HasValue);
+      lCustomer.Code.Value := '5678';
+      lCustomer.Note := lCustomer.Note + sLineBreak + 'Code changed to 5678 🙂';
+      lCustomer.LastContact.Clear;
+      lTestNote := lCustomer.Note;
+      lCustomer.Update;
+      Log('Just updated Customer ' + lID.ToString);
+    finally
+      lCustomer.Free;
+    end;
+  finally
+    lConn.Free;
+  end;
+end;
+
 procedure TMainForm.btnReadOnlyFieldsClick(Sender: TObject);
 var
   lCustomer: TCustomerWithReadOnlyFields;
@@ -2229,8 +2271,7 @@ begin
     lCust.Note := 'Μῆνιν ἄειδε θεὰ Πηληϊάδεω Ἀχιλῆος οὐλομένην 😁';
     lCust.Insert;
     lID := lCust.ID;
-    Log('Just inserted CustomerWithVersion ' + lID.ValueOrDefault.ToString);
-    lCust.Store;
+    Log('Just inserted CustomerWithVersion with ID = ' + lID.ValueOrDefault.ToString + ' and version = ' + lCust.ObjVersion.ToString);
   finally
     lCust.Free;
   end;
@@ -2239,9 +2280,13 @@ begin
   try
     lCust.CompanyName := 'Alphabet Inc.';
     lCust.Store;
+    Log('Just updated CustomerWithVersion with ID = ' + lID.ValueOrDefault.ToString + ' and version = ' + lCust.ObjVersion.ToString);
   finally
     lCust.Free;
   end;
+
+
+  ShowMessage('Now we are going to create a logical conflict - an exception will be raised and no data will be lost');
 
   // Let's load 2 instances
   var lCust1 := TMVCActiveRecord.GetByPK<TCustomerWithVersion>(lID);
@@ -2380,11 +2425,7 @@ begin
     raise Exception.Create('Unknown RDBMS');
   end;
 
-  FDConnection1.Params.Clear;
-  FDConnection1.ConnectionDefName := FDConnectionConfigU.CON_DEF_NAME;
-  FDConnection1.Connected := True;
-
-  ActiveRecordConnectionsRegistry.AddDefaultConnection(FDConnection1);
+  ActiveRecordConnectionsRegistry.AddDefaultConnection(FDConnectionConfigU.CON_DEF_NAME);
   Caption := Caption + ' (Curr Backend: ' + ActiveRecordConnectionsRegistry.GetCurrentBackend + ')';
 {$IFDEF USE_SEQUENCES}
   Caption := Caption + ' USE_SEQUENCES';

@@ -2,7 +2,7 @@
 //
 // Delphi MVC Framework
 //
-// Copyright (c) 2010-2024 Daniele Teti and the DMVCFramework Team
+// Copyright (c) 2010-2025 Daniele Teti and the DMVCFramework Team
 //
 // https://github.com/danieleteti/delphimvcframework
 //
@@ -462,6 +462,11 @@ begin
           begin
             LUsername := lJObj.S[FUserNameHeaderName];
             LPassword := lJObj.S[FPasswordHeaderName];
+            if LUsername.IsEmpty then
+            begin
+              LUsername := lJObj.S['username'];
+              LPassword := lJObj.S['password'];
+            end;
           end;
         finally
           lJObj.Free;

@@ -2,7 +2,7 @@
 //
 // Delphi MVC Framework
 //
-// Copyright (c) 2010-2024 Daniele Teti and the DMVCFramework Team
+// Copyright (c) 2010-2025 Daniele Teti and the DMVCFramework Team
 //
 // https://github.com/danieleteti/delphimvcframework
 //
@@ -32,6 +32,8 @@
 
 unit DMVC.Expert.Forms.NewProjectWizard;
 
+{$I ..\sources\dmvcframework.inc}
+
 interface
 
 uses
@@ -50,7 +52,8 @@ uses
   VCL.ExtCtrls,
   System.Actions,
   Vcl.ActnList,
-  Vcl.AppEvnts, JsonDataObjects;
+  Vcl.AppEvnts,
+  JsonDataObjects;
 
 type
   TfrmDMVCNewProject = class(TForm)
@@ -71,7 +74,6 @@ type
     edtControllerClassName: TEdit;
     chkCreateActionFiltersMethods: TCheckBox;
     chkCreateCRUDMethods: TCheckBox;
-    chkCreateControllerUnit: TCheckBox;
     Shape1: TShape;
     GroupBox1: TGroupBox;
     chkAnalyticsMiddleware: TCheckBox;
@@ -97,9 +99,10 @@ type
     chkCustomConfigDotEnv: TCheckBox;
     chkProfileActions: TCheckBox;
     lblPATREON: TLabel;
-    chkMustache: TCheckBox;
     chkServicesContainer: TCheckBox;
-    procedure chkCreateControllerUnitClick(Sender: TObject);
+    chkSqids: TCheckBox;
+    rgNameCase: TRadioGroup;
+    rgSSV: TRadioGroup;
     procedure FormCreate(Sender: TObject);
     procedure Image1Click(Sender: TObject);
     procedure lblBookMouseEnter(Sender: TObject);
@@ -114,6 +117,7 @@ type
     procedure lblPATREONClick(Sender: TObject);
     procedure lblPATREONMouseEnter(Sender: TObject);
     procedure lblPATREONMouseLeave(Sender: TObject);
+    procedure rgSSVClick(Sender: TObject);
   private
     { Private declarations }
     fModel: TJsonObject;
@@ -142,15 +146,13 @@ type
     function GetConfigModel: TJSONObject;
   end;
 
-var
-  frmDMVCNewProject: TfrmDMVCNewProject;
-
 implementation
 
 uses
   MVCFramework.Commons,
+  MVCFramework.Serializer.Commons,
   System.StrUtils,
-  DMVC.Expert.Commons;
+  DMVC.Expert.Commons, System.TypInfo;
 
 {$R *.dfm}
 
@@ -173,14 +175,6 @@ begin
   begin
     ShowMessage('Remember to include required FireDAC units in your project');
   end;
-end;
-
-procedure TfrmDMVCNewProject.chkCreateControllerUnitClick(Sender: TObject);
-begin
-  chkCreateIndexMethod.Enabled := chkCreateControllerUnit.Checked;
-  chkCreateActionFiltersMethods.Enabled := chkCreateControllerUnit.Checked;
-  chkCreateCRUDMethods.Enabled := chkCreateControllerUnit.Checked;
-  edtControllerClassName.Enabled := chkCreateControllerUnit.Checked;
 end;
 
 procedure TfrmDMVCNewProject.FormCreate(Sender: TObject);
@@ -281,6 +275,18 @@ begin
   lblPATREON.Font.Style := lblPATREON.Font.Style - [fsUnderline];
 end;
 
+procedure TfrmDMVCNewProject.rgSSVClick(Sender: TObject);
+begin
+{$if not Defined(WEBSTENCILS)}
+  if SameText(rgSSV.Items[rgSSV.ItemIndex], 'webstencils') then
+  begin
+    ShowMessage('This Delphi version doesn''t support WebStencils, so DelphiMVCFramework cannot use it.' +
+      sLineBreak + 'Consider to use TemplatePro.');
+    rgSSV.ItemIndex := 1;
+  end;
+{$endif}
+end;
+
 procedure TfrmDMVCNewProject.lblBookClick(Sender: TObject);
 begin
   ShellExecute(0, PChar('open'),
@@ -326,7 +332,7 @@ end;
 
 function TfrmDMVCNewProject.GetCreateControllerUnit: boolean;
 begin
-  Result := chkCreateControllerUnit.Checked;
+  Result := True;
 end;
 
 function TfrmDMVCNewProject.GetCreateCRUDMethods: boolean;
@@ -340,8 +346,11 @@ begin
   fModel.S[TConfigKey.program_name] :=  'TBA';
   fModel.S[TConfigKey.program_default_server_port] := GetServerPort.ToString;
   fModel.B[TConfigKey.program_msheap] := chkMSHeap.Checked;
+  fModel.B[TConfigKey.program_sqids] := chkSqids.Checked;
   fModel.B[TConfigKey.program_dotenv] := chkCustomConfigDotEnv.Checked;
-  fModel.B[TConfigKey.program_ssv_mustache] := chkMustache.Checked;
+  fModel.B[TConfigKey.program_ssv_templatepro] := SameText(rgSSV.Items[rgSSV.ItemIndex], 'templatepro');
+  fModel.B[TConfigKey.program_ssv_webstencils] := SameText(rgSSV.Items[rgSSV.ItemIndex], 'webstencils');
+  fModel.B[TConfigKey.program_ssv_mustache] := SameText(rgSSV.Items[rgSSV.ItemIndex], 'mustache');
   fModel.B[TConfigKey.program_service_container_generate] := chkServicesContainer.Checked;
   fModel.S[TConfigKey.program_service_container_unit_name] := 'TBA';
   fModel.S[TConfigKey.controller_unit_name] := 'TBA';
@@ -350,12 +359,12 @@ begin
   fModel.B[TConfigKey.controller_action_filters_generate] :=  chkCreateActionFiltersMethods.Checked;
   fModel.B[TConfigKey.controller_crud_methods_generate] :=  chkCreateCRUDMethods.Checked;
   fModel.B[TConfigKey.controller_actions_profiling_generate] :=  chkProfileActions.Checked;
-  fModel.B[TConfigKey.entity_generate] :=  fModel.B[TConfigKey.controller_crud_methods_generate];
+  fModel.B[TConfigKey.entity_generate] := fModel.B[TConfigKey.controller_crud_methods_generate] or fModel.B[TConfigKey.program_service_container_generate];
   fModel.S[TConfigKey.entity_classname] :=  'TPerson';
   fModel.B[TConfigKey.jsonrpc_generate] :=  GetCreateJSONRPCInterface;
   fModel.S[TConfigKey.jsonrpc_classname] :=  GetJSONRPCClassName;
   fModel.S[TConfigKey.jsonrpc_unit_name] := 'TBA';
-
+  fModel.S[TConfigKey.serializer_name_case] := GetEnumName(TypeInfo(TMVCNameCase), rgNameCase.ItemIndex + 1);
   //webmodule
 
   fModel.S[TConfigKey.webmodule_classname] :=  GetWebModuleClassName;

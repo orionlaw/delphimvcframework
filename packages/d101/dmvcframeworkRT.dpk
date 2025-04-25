@@ -56,7 +56,6 @@ contains
   MVCFramework.Middleware.ETag in '..\..\sources\MVCFramework.Middleware.ETag.pas',
   MVCFramework.ActiveRecord in '..\..\sources\MVCFramework.ActiveRecord.pas',
   MVCFramework.ActiveRecordController in '..\..\sources\MVCFramework.ActiveRecordController.pas',
-  MVCFramework.ApplicationSession in '..\..\sources\MVCFramework.ApplicationSession.pas',
   MVCFramework.Cache in '..\..\sources\MVCFramework.Cache.pas',
   MVCFramework.Commons in '..\..\sources\MVCFramework.Commons.pas',
   MVCFramework.Console in '..\..\sources\MVCFramework.Console.pas',
@@ -117,7 +116,8 @@ contains
   MVCFramework.Serializer.URLEncoded in '..\..\sources\MVCFramework.Serializer.URLEncoded.pas',
   MVCFramework.Serializer.Text in '..\..\sources\MVCFramework.Serializer.Text.pas',
   LoggerPro.ConsoleAppender in '..\..\lib\loggerpro\LoggerPro.ConsoleAppender.pas',
-  MVCFramework.Container in '..\..\sources\MVCFramework.Container.pas';
+  MVCFramework.Container in '..\..\sources\MVCFramework.Container.pas',
+  sqids in '..\..\sources\sqids.pas';
 
 end.
 

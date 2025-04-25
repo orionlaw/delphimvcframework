@@ -2,7 +2,7 @@
 //
 // Delphi MVC Framework
 //
-// Copyright (c) 2010-2024 Daniele Teti and the DMVCFramework Team
+// Copyright (c) 2010-2025 Daniele Teti and the DMVCFramework Team
 //
 // https://github.com/danieleteti/delphimvcframework
 //
@@ -373,6 +373,21 @@ type
     [MVCHTTPMethod([httpGET])]
     [MVCPath('/issues/542')]
     procedure TestIssue542;
+
+    {sqids}
+    [MVCHTTPMethod([httpGET])]
+    [MVCPath('/sqids/stoi/($id:sqids)')]
+    function TestReceiveSqidAsInteger(id: Int64): Int64;
+
+    [MVCHTTPMethod([httpGET])]
+    [MVCPath('/sqids/itos/($id)')]
+    function TestReceiveIntegerAndReturnSqid(id: Int64): String;
+
+    {invalid converter}
+    [MVCHTTPMethod([httpGET])]
+    [MVCPath('/wrongconverter/($id:blablabla)')]
+    function TestInvalidConverter(id: Int64): Int64;
+
   end;
 
   [MVCPath('/private')]
@@ -1045,6 +1060,11 @@ begin
   Render('hello world');
 end;
 
+function TTestServerController.TestInvalidConverter(id: Int64): Int64;
+begin
+  Result := id; //never called
+end;
+
 procedure TTestServerController.TestIssue406;
 begin
   Render(HTTP_STATUS.UnprocessableEntity, TMVCErrorResponseItem.Create('The Message'));
@@ -1127,6 +1147,18 @@ var
 begin
   Person := Context.Request.BodyAs<TPerson>();
   Render(Person);
+end;
+
+function TTestServerController.TestReceiveIntegerAndReturnSqid(
+  id: Int64): String;
+begin
+  Result := TMVCSqids.IntToSqid(id);
+end;
+
+function TTestServerController.TestReceiveSqidAsInteger(
+  id: Int64): Int64;
+begin
+  Result := id;
 end;
 
 procedure TTestServerController.TestRenderStreamAndFreeWithOwnerFalse;
@@ -1294,7 +1326,7 @@ begin
     lDS.LoadFromFile(lFName);
     ViewData['customers'] := lDS;
     ViewData['customers2'] := lDS;
-    LoadView(['dataset_list']);
+    ResponseStream.Append(RenderView('dataset_list'));
     RenderResponseStream;
   finally
     lDS.Free;

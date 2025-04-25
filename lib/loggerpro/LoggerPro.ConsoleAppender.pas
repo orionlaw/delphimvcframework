@@ -2,7 +2,7 @@
 //
 // LoggerPro
 //
-// Copyright (c) 2010-2024 Daniele Teti
+// Copyright (c) 2010-2025 Daniele Teti
 //
 // https://github.com/danieleteti/loggerpro
 //
@@ -65,6 +65,12 @@ type
     procedure WriteLog(const aLogItem: TLogItem); override;
   end;
 
+  TLoggerProConsoleLogFmtAppender = class(TLoggerProConsoleAppender)
+  public
+    constructor Create(ALogItemRenderer: ILogItemRenderer = nil); override;
+    function FormatLog(const ALogItem: TLogItem): string; override;
+  end;
+
   // for some reason, AttachConsole has been left out of Winapi.windows.pas
 function AttachConsole(PID: Cardinal): LongBool; stdcall;
 
@@ -74,7 +80,8 @@ implementation
 
 uses
   Winapi.Windows,
-  Winapi.Messages;
+  Winapi.Messages,
+  LoggerPro.Renderers;
 
 // for some reason, AttachConsole has been left out of Winapi.windows.pas
 const
@@ -139,8 +146,8 @@ end;
 procedure TLoggerProConsoleAppender.SetupColorMappings;
 begin
   fColors[TLogType.Debug] := FOREGROUND_GREEN;
-  fColors[TLogType.Info] := FOREGROUND_BLUE or FOREGROUND_GREEN or FOREGROUND_RED;
-  fColors[TLogType.Warning] := FOREGROUND_RED or FOREGROUND_GREEN or FOREGROUND_INTENSITY;
+  fColors[TLogType.Info] := FOREGROUND_BLUE or FOREGROUND_GREEN or FOREGROUND_RED or FOREGROUND_INTENSITY;
+  fColors[TLogType.Warning] := FOREGROUND_RED or FOREGROUND_GREEN;
   fColors[TLogType.Error] := FOREGROUND_RED or FOREGROUND_INTENSITY;
   fColors[TLogType.Fatal] := FOREGROUND_RED or FOREGROUND_BLUE or FOREGROUND_INTENSITY;
 end;
@@ -183,6 +190,25 @@ begin
     FreeAndNil(TLoggerProConsoleAppender.FLock);
   except
     // No exception checking here or the app might blow up with a RTE 217
+  end;
+end;
+
+{ TLoggerProConsoleLogFmtAppender }
+
+constructor TLoggerProConsoleLogFmtAppender.Create(ALogItemRenderer: ILogItemRenderer);
+begin
+  inherited Create(TLogItemRendererLogFmt.Create);
+end;
+
+function TLoggerProConsoleLogFmtAppender.FormatLog(const ALogItem: TLogItem): string;
+begin
+  if Assigned(FOnLogRow) then
+  begin
+    FOnLogRow(ALogItem, Result);
+  end
+  else
+  begin
+    Result := FLogItemRenderer.RenderLogItem(ALogItem);
   end;
 end;
 

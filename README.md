@@ -1,9 +1,9 @@
 # DelphiMVCFramework ![Mentioned in Awesome Go](https://awesome.re/mentioned-badge.svg) ![GitHub All Releases](https://img.shields.io/github/downloads/danieleteti/delphimvcframework/total?label=Downloads)
 
-![](https://img.shields.io/badge/stable-dmvcframework--3.4.1--sodium-blue)
-![](https://img.shields.io/badge/beta-dmvcframework--3.4.2--magnesium--beta-red)  
+![](https://img.shields.io/badge/stable-dmvcframework--3.4.2--magnesium-blue)
+![](https://img.shields.io/badge/beta-dmvcframework--3.4.3--aluminium--dev)
 
-## 📍 [Help DMVCFramework, Click Here to become a Supporter!](https://www.patreon.com/bePatron?u=72182967) 
+## 📍 [Help DMVCFramework and your business! Click Here to access premium contents!](https://www.patreon.com/bePatron?u=72182967) 
 
 ## 💻 Code Contributors
 
@@ -24,8 +24,9 @@
     - [How to partecipate to DMVCFramework development and/or tests](#how-to-partecipate-to-dmvcframework-development-andor-tests)
   - [Sponsors](#sponsors)
   - [What users say about DMVCFramework](#what-users-say-about-dmvcframework)
-  - [What's New in DMVCFramework-3.4.1-sodium (stable version)](#whats-new-in-dmvcframework-341-sodium-stable-version)
+  - [What's New in DMVCFramework-3.4.2-magnesium (stable version)](#whats-new-in-dmvcframework-342-magnesium-stable-version)
   - [Older Versions](#older-versions)
+    - [What's New in DMVCFramework-3.4.1-sodium](#whats-new-in-dmvcframework-341-sodium)
     - [What's New in DMVCFramework-3.4.0-neon](#whats-new-in-dmvcframework-340-neon)
     - [What's New in DMVCFramework-3.3.0-fluorine](#whats-new-in-dmvcframework-330-fluorine)
     - [What's New in DMVCFramework-3.2.3-radium](#whats-new-in-dmvcframework-323-radium)
@@ -64,9 +65,9 @@
 
 ## What's DelphiMVCFramework
 
-DMVCFramework is a very popular Delphi framework which provides an easy to use, scalable, flexible [RESTful](https://en.wikipedia.org/wiki/Representational_state_transfer), [JSON-RPC](https://en.wikipedia.org/wiki/JSON-RPC) and [ActiveRecord](https://www.martinfowler.com/eaaCatalog/activeRecord.html) framework for Delphi developers. DMVCFramework is the **most popular** Delphi project on GitHub and compiles for Windows (32 and 64bit) and Linux (64bit). DMVCFramework services can be compiled as console application,  Windows Service, Linux daemon, Apache module (Windows and Linux) and IIS ISAPI (Windows).
+DMVCFramework is the most popular Open Source Delphi framework on Github which provides an easy to use, scalable, flexible [RESTful](https://en.wikipedia.org/wiki/Representational_state_transfer), [JSON-RPC](https://en.wikipedia.org/wiki/JSON-RPC) and [ActiveRecord](https://www.martinfowler.com/eaaCatalog/activeRecord.html) framework for Delphi developers. DMVCFramework is the **most popular** Delphi project on GitHub and compiles for Windows (32 and 64bit) and Linux (64bit). DMVCFramework services can be compiled as console application,  Windows Service, Linux daemon, Apache module (Windows and Linux) and IIS ISAPI (Windows).
 
-DMVCFramework works with Delphi 11 Alexandria, Delphi 10.4 Sydney, Delphi 10.3 Rio, Delphi 10.2 Tokyo, Delphi 10.1 Berlin,  Delphi 10 Seattle.
+DMVCFramework works with Delphi 12 Athens, Delphi 11 Alexandria, Delphi 10.4 Sydney, Delphi 10.3 Rio, Delphi 10.2 Tokyo, Delphi 10.1 Berlin and Delphi 10 Seattle.
 
 ## Support DMVCFramework
 
@@ -74,13 +75,12 @@ Are you using DMVCFramework? Do you want to say "Thanks"? <a href="https://www.p
 
 ### DelphiMVCFramework Main Features
 
-  * DMVCFramwork is simple to use, has a [lot of examples](https://github.com/danieleteti/delphimvcframework/tree/master/samples), is documented and there are a [lot of tutorials](https://www.youtube.com/results?search_query=delphimvcframework) available.
+* DMVCFramwork is simple to use, has a [lot of examples](https://github.com/danieleteti/delphimvcframework/tree/master/samples), is documented and there are a [lot of tutorials](https://www.youtube.com/results?search_query=delphimvcframework) available.
 
-  * DMVCFramework is very well documented and the book [DMVCFramework - the official guide](http://www.danieleteti.it/books/) is available to fastly get a solid knowledge (available as e-book and hardcopy).
+* DMVCFramework is very well documented and the book [DMVCFramework - the official guide](http://www.danieleteti.it/books/) is available to fastly get a solid knowledge (available as e-book and hardcopy).
 
-  * [Project Roadmap](roadmap.md) is always public
 * There are more than 40 samples to learn all the features and be proficient and productive
-* Commercially supported by [bit Time Professionals](http://www.bittimeprofessionals.it) (training, consultancy, custom development etc.)
+* Commercially supported by [bit Time Professionals](https://www.bittimeprofessionals.it) (training, consultancy, custom development etc.)
 
 * RESTful (RMM Level 3) compliant
 
@@ -90,15 +90,15 @@ Are you using DMVCFramework? Do you want to say "Thanks"? <a href="https://www.p
 
 * Stable and solid, used by small/mid/big projects since 2010
 
-* Very fast! (2.x was pretty fast and now, 3.x is 60% faster than the 2.x!)
+* Very fast!
 
-* Support group at https://www.facebook.com/groups/delphimvcframework with more than 4900 active members
+* Support group at https://www.facebook.com/groups/delphimvcframework with more than 6000 active members
 
 * Can be used in load balanced environment
 
 * Wizard for the Delphi IDE. It makes DelphiMVCFramework even more simple to use!
 
-* Optional session support
+* Optional server side session support
 
 * JSON Web Token Support (JWT) (check [sample](https://github.com/danieleteti/delphimvcframework/tree/master/samples/jsonwebtoken))
 
@@ -225,12 +225,17 @@ Congratulations to Daniele Teti and all the staff for the excellent work!" -- Ma
 > "I managed to generate an API for my application thanks to this framework, it is truly useful and efficient!" -- J. Urbani
 
 
-## What's New in DMVCFramework-3.4.1-sodium (stable version)
-
->👉 A deep analisys of what's new in DelphiMVCFramework-3.4.1-sodium is available on [Daniele Teti Blog](https://www.danieleteti.it/post/delphimvcframework-3-4-1-sodium/) 👈
+## What's New in DMVCFramework-3.4.2-magnesium (stable version)
+>👉 A deep analisys of what's new in DelphiMVCFramework-3.4.2-magnesium is available on [Daniele Teti Blog]
+https://www.danieleteti.it/post/delphimvcframework-3-4-2-magnesium/
 
   
 ## Older Versions
+
+### What's New in DMVCFramework-3.4.1-sodium
+
+>👉 A deep analisys of what's new in DelphiMVCFramework-3.4.1-sodium is available on [Daniele Teti Blog](https://www.danieleteti.it/post/delphimvcframework-3-4-1-sodium/) 👈
+
 
 ### What's New in DMVCFramework-3.4.0-neon
 
@@ -1597,6 +1602,9 @@ end;
 
 | Delphi Version      | Project Group                                 |
 | ------------------- | --------------------------------------------- |
+| Delphi 12 Athens | `packages\d120\dmvcframework_group.groupproj` |
+| Delphi 11.3 Alexandria | `packages\d113\dmvcframework_group.groupproj` |
+| Delphi 11 Alexandria | `packages\d110\dmvcframework_group.groupproj` |
 | Delphi 10.4 Sydney  | `packages\d104\dmvcframework_group.groupproj` |
 | Delphi 10.3 Rio     | `packages\d103\dmvcframework_group.groupproj` |
 | Delphi 10.2 Tokyo   | `packages\d102\dmvcframework_group.groupproj` |
@@ -1719,7 +1727,7 @@ DelphiMVCFramework roadmap is always updated as-soon-as the features planned are
 
 ## Trainings, consultancy or custom development service
 As you know, good support on open source software is a must for professional users.
-If you need trainings, consultancy or custom developments on DelphiMVCFramework, send an email to *dmvcframework at bittime dot it*. Alternatively you can send a request using the [contacts forms](http://www.bittimeprofessionals.it/contatti) on [bit Time Professionals website](http://www.bittimeprofessionals.it). bit Time Professionals is the company behind DelphiMVCFramework, the lead developer works there.
+If you need trainings, consultancy or custom developments on DelphiMVCFramework, send an email to *dmvcframework at bittime dot it*. Alternatively you can send a request using the [contacts forms](http://www.bittimeprofessionals.it/contatti) on [bit Time Professionals website](https://www.bittimeprofessionals.it). bit Time Professionals is the company behind DelphiMVCFramework, the lead developer works there.
 
 ## Samples and documentation
 DMVCFramework is provided with a lot of examples focused on specific functionality.
